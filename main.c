@@ -103,7 +103,7 @@ int main(int argc, char** args)
 
                     printf("%-15ld", statbuf->st_size);
 
-                    // char* t = ctime(&statbuf->st_mtim.tv_sec);
+                    char* t = ctime(&statbuf->st_mtim.tv_sec);
                     // char mmm[3];
                     // char dd[2];
                     // char yyyy[4];
@@ -115,9 +115,8 @@ int main(int argc, char** args)
                     // strncpy(mm, t+14, 2);
                     // strncpy(yyyy, t+20, 4);
 
-                    // // printf("%-30s", t);
-                    // printf("%-30s", mmm);
-                    // // printf("%-20s%-20s%-20s%-20s:%-20s", mmm, dd, yyyy, hh, mm);
+                    // printf("%-30s", t);
+                    printf("%-7.*s%-5.*s%.*s:%-5.*s", 6, t+4, 4, t+20, 2, t+11, 2, t+14);
 
 
                     free(statbuf);
