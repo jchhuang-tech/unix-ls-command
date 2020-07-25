@@ -50,17 +50,21 @@ int main(int argc, char** args)
         fileCount++;
     }
 
-    char* pathname;
-        struct dirent* dp;
-        DIR* dirp;
+    char* pathname = NULL;
     for(int i=0; i<fileCount; i++){
         pathname = fileList[i];
+        if(fileCount > 1){
+            printf( (i==0) ? "" : "\n");
+            printf("%s:\n", pathname);
+        }
+        DIR* dirp = NULL;
         dirp = opendir(pathname);
         if(dirp == NULL){
             fprintf(stderr, "cannot find directory %s: ", pathname);
             perror("");
             continue;
         }
+        struct dirent* dp = NULL;
         while ((dp = readdir(dirp)) != NULL){
             if(dp->d_name[0] != '.'){
                 if(index){
@@ -74,11 +78,16 @@ int main(int argc, char** args)
                     snprintf(pathForLongList, sizeof(pathForLongList), "%s/%s", pathname, dp->d_name);
                     lstat(pathForLongList, statbuf);
 
-                    if(S_ISREG(statbuf->st_mode)){
-                        printf("-");
-                    }else if(S_ISDIR(statbuf->st_mode)){
-                        printf("d");
-                    }
+                    // if(S_ISREG(statbuf->st_mode)){
+                    //     printf("-");
+                    // }else if(S_ISDIR(statbuf->st_mode)){
+                    //     printf("d");
+                    // }else if(S_ISLNK(statbuf->st_mode)){
+                    //     printf("l");
+                    // }
+                    printf( (S_ISREG(statbuf->st_mode)) ? "-" : "");
+                    printf( (S_ISDIR(statbuf->st_mode)) ? "d" : "");
+                    printf( (S_ISLNK(statbuf->st_mode)) ? "l" : "");
 
                     printf( (statbuf->st_mode & S_IRUSR) ? "r" : "-");
                     printf( (statbuf->st_mode & S_IWUSR) ? "w" : "-");
@@ -103,25 +112,11 @@ int main(int argc, char** args)
 
                     printf("%-15ld", statbuf->st_size);
 
-                    char* t = ctime(&statbuf->st_mtim.tv_sec);
-                    // char mmm[3];
-                    // char dd[2];
-                    // char yyyy[4];
-                    // char hh[2];
-                    // char mm[2];
-                    // strncpy(mmm, t+4, 3);
-                    // strncpy(dd, t+8, 2);
-                    // strncpy(hh, t+11, 2);
-                    // strncpy(mm, t+14, 2);
-                    // strncpy(yyyy, t+20, 4);
-
-                    // printf("%-30s", t);
-                    printf("%-7.*s%-5.*s%.*s:%-5.*s", 6, t+4, 4, t+20, 2, t+11, 2, t+14);
-
+                    char* mt = ctime(&statbuf->st_mtim.tv_sec);
+                    printf("%-7.*s%-5.*s%-10.*s", 6, mt+4, 4, mt+20, 5, mt+11);
 
                     free(statbuf);
                 }
-                // printf("\n");
                 printf("%s\n", dp->d_name);
             }
         }
@@ -130,22 +125,5 @@ int main(int argc, char** args)
 
     free(fileList);
     
-    // printf("index: %d, longList: %d, recur: %d\n", index, longList, recur);
-
-
-
-        // printf("d_ino: %ld\n", dp->d_ino);
-
-    // struct stat* statbuf = malloc(sizeof(stat));
-    // stat(pathname, statbuf);
-    
-    // printf("st_ino: %ld\n", statbuf->st_ino);
-    // printf("st_mode: %d\n", statbuf->st_mode);
-    // printf("st_uid: %d\n", statbuf->st_uid);
-    // printf("st_gid: %d\n", statbuf->st_gid);
-    // printf("st_size: %ld\n", statbuf->st_size);
-    // printf("st_atime: %ld\n", statbuf->st_atime);
-
-
     return 0;
 }
