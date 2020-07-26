@@ -25,7 +25,7 @@ bool isDir(char* path);
 void listDir(char* path);
 void listNonDir(char* path);
 void printStat(struct stat* statbuf, char* filename, char* path);
-
+void lexicalSort(char** arr, int start, int end);
 
 int main(int argc, char** args)
 {
@@ -39,6 +39,7 @@ int main(int argc, char** args)
     setOptionsFiles(argc, args);
     // this part needs modificaton
     // we need to sort the fileList before using any items in it
+    lexicalSort(fileList, 0, fileCount-1);
 
     // this part needs modification
     // we need to modify the printing function to ensure there is space ('\n's) between files and directories
@@ -60,6 +61,25 @@ int main(int argc, char** args)
     free(fileList);
     
     return 0;
+}
+
+void lexicalSort(char** arr, int start, int end)
+{
+    char* tmp = NULL;
+    for(int i=start; i<=end; i++){
+        for(int j=i+1; j<=end; j++){
+            // char* str1 = malloc(PATH_MAX);
+            // strncpy(str1, arr[i]);
+            // char* str2 = malloc(PATH_MAX);
+            // strncpy(str2, arr[j]);
+            // we must make str1 and str2 all lowercase, so we can compare them
+            if(strcmp(arr[i], arr[j]) > 0){
+                tmp = arr[i];
+                arr[i] = arr[j];
+                arr[j] = tmp;
+            }
+        }
+    }
 }
 
 void setOptionsFiles(int argc, char** args)
@@ -114,6 +134,8 @@ bool isDir(char* path)
 
 void listDir(char* path)
 {
+    char* direntList[10000];
+    int direntCount = 0;
     char* subDirList[10000];
     int subDirCount = 0;
 
@@ -126,29 +148,44 @@ void listDir(char* path)
     struct dirent* de = NULL;
     while ((de = readdir(dirp)) != NULL){
         if(de->d_name[0] != '.'){
-            struct stat* statbuf = malloc(10000);
             char pathForLongList[PATH_MAX];
             snprintf(pathForLongList, sizeof(pathForLongList), "%s/%s", path, de->d_name);
-            lstat(pathForLongList, statbuf);
-            // this part needs modificaton
-            // we need to sort all the entries before printing the info
-            // one way to do it is we put them in an array, sort them after the loop ends, and print their info
-            printStat(statbuf, de->d_name, pathForLongList);
-            if(recur){
-                if(S_ISDIR(statbuf->st_mode)){
-                    char* subDirPath = malloc(PATH_MAX);
-                    strncpy(subDirPath, pathForLongList, sizeof(pathForLongList));
-                    subDirList[subDirCount] = subDirPath;
-                    subDirCount++;
-                }
-            }
-            free(statbuf);
+            char* direntPath = malloc(PATH_MAX);
+            strncpy(direntPath, pathForLongList, sizeof(pathForLongList));
+            direntList[direntCount] = direntPath;
+            direntCount++;
+
+
         }
     }
     closedir(dirp);
+
+    lexicalSort(direntList, 0, direntCount-1);
+    for(int i=0; i<direntCount; i++){
+        struct stat* statbuf = malloc(10000);
+        lstat(direntList[i], statbuf);
+        // this part needs modificaton
+        // we need to sort all the entries before printing the info
+        // one way to do it is we put them in an array, sort them after the loop ends, and print their info
+        printStat(statbuf, basename(direntList[i]), direntList[i]);
+        if(recur){
+            if(S_ISDIR(statbuf->st_mode)){
+                char* subDirPath = malloc(PATH_MAX);
+                strncpy(subDirPath, direntList[i], PATH_MAX);
+                subDirList[subDirCount] = subDirPath;
+                subDirCount++;
+            }
+        }
+        free(statbuf);
+    }
+    for(int i=0; i<direntCount; i++){
+        free(direntList[i]);
+    }
+
     if(recur){
         // this part needs modificaton
         // we need to sort subDirList before recursing on the items
+        lexicalSort(subDirList, 0, subDirCount-1);
         for(int i=0; i<subDirCount; i++){
             printf("\n%s:\n", subDirList[i]);
             listDir(subDirList[i]);
