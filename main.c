@@ -15,6 +15,8 @@ static bool index = false;
 static bool longList = false;
 static bool recur = false;
 
+void printStat(struct stat* statbuf, char* filename, char* path);
+
 int main(int argc, char** args)
 {
     if (argc < 1){
@@ -67,57 +69,20 @@ int main(int argc, char** args)
         struct dirent* dp = NULL;
         while ((dp = readdir(dirp)) != NULL){
             if(dp->d_name[0] != '.'){
-                if(index){
-                    printf("%-30ld", dp->d_ino);
-                }
-                if(longList){
-                    struct stat* statbuf = malloc(10000);
-                    // printf("size of stat: %ld\n", sizeof(stat));
-                    // statbuf = realloc(statbuf, 1000000);
-                    char pathForLongList[PATH_MAX];
-                    snprintf(pathForLongList, sizeof(pathForLongList), "%s/%s", pathname, dp->d_name);
-                    lstat(pathForLongList, statbuf);
-
-                    // if(S_ISREG(statbuf->st_mode)){
-                    //     printf("-");
-                    // }else if(S_ISDIR(statbuf->st_mode)){
-                    //     printf("d");
-                    // }else if(S_ISLNK(statbuf->st_mode)){
-                    //     printf("l");
-                    // }
-                    printf( (S_ISREG(statbuf->st_mode)) ? "-" : "");
-                    printf( (S_ISDIR(statbuf->st_mode)) ? "d" : "");
-                    printf( (S_ISLNK(statbuf->st_mode)) ? "l" : "");
-
-                    printf( (statbuf->st_mode & S_IRUSR) ? "r" : "-");
-                    printf( (statbuf->st_mode & S_IWUSR) ? "w" : "-");
-                    printf( (statbuf->st_mode & S_IXUSR) ? "x" : "-");
-                    printf( (statbuf->st_mode & S_IRGRP) ? "r" : "-");
-                    printf( (statbuf->st_mode & S_IWGRP) ? "w" : "-");
-                    printf( (statbuf->st_mode & S_IXGRP) ? "x" : "-");
-                    printf( (statbuf->st_mode & S_IROTH) ? "r" : "-");
-                    printf( (statbuf->st_mode & S_IWOTH) ? "w" : "-");
-                    printf( (statbuf->st_mode & S_IXOTH) ? "x" : "-");
-                    printf("     ");
-
-                    printf("%-10ld", statbuf->st_nlink);
-                    
-                    struct passwd* pw = getpwuid(statbuf->st_uid);
-                    if(pw){
-                        printf("%-15s", pw->pw_name);
-                    }
-                
-                    struct group* grp = getgrgid(statbuf->st_gid);
-                    printf("%-20s", grp->gr_name);
-
-                    printf("%-15ld", statbuf->st_size);
-
-                    char* mt = ctime(&statbuf->st_mtim.tv_sec);
-                    printf("%-7.*s%-5.*s%-10.*s", 6, mt+4, 4, mt+20, 5, mt+11);
-
-                    free(statbuf);
-                }
-                printf("%s\n", dp->d_name);
+                struct stat* statbuf = malloc(10000);
+                // printf("size of stat: %ld\n", sizeof(stat));
+                // statbuf = realloc(statbuf, 1000000);
+                char pathForLongList[PATH_MAX];
+                snprintf(pathForLongList, sizeof(pathForLongList), "%s/%s", pathname, dp->d_name);
+                lstat(pathForLongList, statbuf);
+                printStat(statbuf, dp->d_name, pathForLongList);
+                // printf("%s", dp->d_name);
+                // if(S_ISLNK(statbuf->st_mode)){
+                //     char* linkbuf = malloc(PATH_MAX);
+                //     readlink(pathForLongList, linkbuf, PATH_MAX);
+                //     printf(" -> %s", linkbuf);
+                // }
+                // printf("\n");
             }
         }
         closedir(dirp);
@@ -126,4 +91,54 @@ int main(int argc, char** args)
     free(fileList);
     
     return 0;
+}
+
+void printStat(struct stat* statbuf, char* filename, char* path)
+{
+    if(index){
+        printf("%-30ld", statbuf->st_ino);
+    }
+    if(longList){
+        printf( (S_ISREG(statbuf->st_mode)) ? "-" : "");
+        printf( (S_ISDIR(statbuf->st_mode)) ? "d" : "");
+        printf( (S_ISLNK(statbuf->st_mode)) ? "l" : "");
+
+        printf( (statbuf->st_mode & S_IRUSR) ? "r" : "-");
+        printf( (statbuf->st_mode & S_IWUSR) ? "w" : "-");
+        printf( (statbuf->st_mode & S_IXUSR) ? "x" : "-");
+        printf( (statbuf->st_mode & S_IRGRP) ? "r" : "-");
+        printf( (statbuf->st_mode & S_IWGRP) ? "w" : "-");
+        printf( (statbuf->st_mode & S_IXGRP) ? "x" : "-");
+        printf( (statbuf->st_mode & S_IROTH) ? "r" : "-");
+        printf( (statbuf->st_mode & S_IWOTH) ? "w" : "-");
+        printf( (statbuf->st_mode & S_IXOTH) ? "x" : "-");
+        printf("     ");
+
+        printf("%-7ld", statbuf->st_nlink);
+        
+        struct passwd* pw = getpwuid(statbuf->st_uid);
+        if(pw){
+            printf("%-15s", pw->pw_name);
+        }
+
+        struct group* grp = getgrgid(statbuf->st_gid);
+        printf("%-20s", grp->gr_name);
+
+        printf("%-10ld", statbuf->st_size);
+
+        char* mt = ctime(&statbuf->st_mtim.tv_sec);
+        printf("%-7.*s%-5.*s%-10.*s", 6, mt+4, 4, mt+20, 5, mt+11);
+    }
+    printf("%s", filename);
+    if(longList){
+        if(S_ISLNK(statbuf->st_mode)){
+            char* linkbuf = malloc(PATH_MAX);
+            readlink(path, linkbuf, PATH_MAX);
+            printf(" -> %s", linkbuf);
+
+        }
+    }
+    printf("\n");
+
+    free(statbuf);
 }
