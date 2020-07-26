@@ -60,11 +60,12 @@ int main(int argc, char** args)
 
 void setOptionsFiles(int argc, char** args)
 {
-    // this algorithm needs modification
     // we must allow a file or directory to start with '-' if it's listed after another file/directory
     // we must treat every argument after the first file/dir argument as a file/dir argument instead of an option
+    bool optionListEnded = false;
+
     for(int i=1; i<argc; i++){
-        if(args[i][0] == '-'){
+        if(args[i][0] == '-' && !optionListEnded){
             for(int j=1; j<strlen(args[i]); j++){
                 if(args[i][j] == 'i'){
                     index = true;
@@ -81,6 +82,7 @@ void setOptionsFiles(int argc, char** args)
         else{
             fileList[fileCount] = args[i];
             fileCount++;
+            optionListEnded = true;
         }
     }
     
