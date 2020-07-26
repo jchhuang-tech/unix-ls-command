@@ -10,12 +10,22 @@
 #include <pwd.h>
 #include <grp.h>
 #include <limits.h>
+#include <stdbool.h>
+#include <libgen.h>
 
 static bool index = false;
 static bool longList = false;
 static bool recur = false;
 
+static char** fileList = NULL;
+static int fileCount = 0;
+
+void setOptionsFiles(int argc, char** args);
+bool isDir(char* path);
+void listDir(char* path);
+void listNonDir(char* path);
 void printStat(struct stat* statbuf, char* filename, char* path);
+
 
 int main(int argc, char** args)
 {
@@ -23,9 +33,36 @@ int main(int argc, char** args)
         exit(EXIT_FAILURE);
     }
 
-    char** fileList = malloc(sizeof(char*)*argc);
-    int fileCount = 0;
+    fileList = malloc(sizeof(char*)*argc);
+    fileCount = 0;
 
+    setOptionsFiles(argc, args);
+
+    char* pathname = NULL;
+    for(int i=0; i<fileCount; i++){
+        pathname = fileList[i];
+        if(isDir(pathname)){
+            if(fileCount > 1 || recur){
+                printf( (i==0) ? "" : "\n");
+                printf("%s:\n", pathname);
+            }
+            listDir(pathname);
+        }
+        else{
+            listNonDir(pathname);
+        }
+    }
+
+    free(fileList);
+    
+    return 0;
+}
+
+void setOptionsFiles(int argc, char** args)
+{
+    // this algorithm needs modification
+    // we must allow a file or directory to start with '-' if it's listed after another file/directory
+    // we must treat every argument after the first file/dir argument as a file/dir argument instead of an option
     for(int i=1; i<argc; i++){
         if(args[i][0] == '-'){
             for(int j=1; j<strlen(args[i]); j++){
@@ -51,46 +88,75 @@ int main(int argc, char** args)
         fileList[0] = ".";
         fileCount++;
     }
+}
 
-    char* pathname = NULL;
-    for(int i=0; i<fileCount; i++){
-        pathname = fileList[i];
-        if(fileCount > 1){
-            printf( (i==0) ? "" : "\n");
-            printf("%s:\n", pathname);
-        }
-        DIR* dirp = NULL;
-        dirp = opendir(pathname);
-        if(dirp == NULL){
-            fprintf(stderr, "cannot find directory %s: ", pathname);
-            perror("");
-            continue;
-        }
-        struct dirent* dp = NULL;
-        while ((dp = readdir(dirp)) != NULL){
-            if(dp->d_name[0] != '.'){
-                struct stat* statbuf = malloc(10000);
-                // printf("size of stat: %ld\n", sizeof(stat));
-                // statbuf = realloc(statbuf, 1000000);
-                char pathForLongList[PATH_MAX];
-                snprintf(pathForLongList, sizeof(pathForLongList), "%s/%s", pathname, dp->d_name);
-                lstat(pathForLongList, statbuf);
-                printStat(statbuf, dp->d_name, pathForLongList);
-                // printf("%s", dp->d_name);
-                // if(S_ISLNK(statbuf->st_mode)){
-                //     char* linkbuf = malloc(PATH_MAX);
-                //     readlink(pathForLongList, linkbuf, PATH_MAX);
-                //     printf(" -> %s", linkbuf);
-                // }
-                // printf("\n");
-            }
-        }
-        closedir(dirp);
+bool isDir(char* path)
+{
+    struct stat* filesb = malloc(10000);
+    if (lstat(path, filesb) < 0){
+        perror(path);
+        exit(EXIT_FAILURE);
     }
+    if(S_ISDIR(filesb->st_mode)){
+        free(filesb);
+        return true;
+    }else{
+        free(filesb);
+        return false;
+    }
+}
 
-    free(fileList);
-    
-    return 0;
+void listDir(char* path)
+{
+    char* subDirList[10000];
+    int subDirCount = 0;
+
+    DIR* dirp = NULL;
+    dirp = opendir(path);
+    // if(dirp == NULL){
+    //     perror("cannot find directory");
+    //     return;
+    // }
+    struct dirent* de = NULL;
+    while ((de = readdir(dirp)) != NULL){
+        if(de->d_name[0] != '.'){
+            struct stat* statbuf = malloc(10000);
+            char pathForLongList[PATH_MAX];
+            snprintf(pathForLongList, sizeof(pathForLongList), "%s/%s", path, de->d_name);
+            lstat(pathForLongList, statbuf);
+            printStat(statbuf, de->d_name, pathForLongList);
+            if(recur){
+                if(S_ISDIR(statbuf->st_mode)){
+                    char* subDirPath = malloc(PATH_MAX);
+                    strncpy(subDirPath, pathForLongList, sizeof(pathForLongList));
+                    subDirList[subDirCount] = subDirPath;
+                    subDirCount++;
+                }
+            }
+            free(statbuf);
+        }
+    }
+    closedir(dirp);
+    if(recur){
+        for(int i=0; i<subDirCount; i++){
+            printf("\n%s:\n", subDirList[i]);
+            listDir(subDirList[i]);
+        }
+        for(int i=0; i<subDirCount; i++){
+            free(subDirList[i]);
+        }
+    }
+}
+
+void listNonDir(char* path)
+{
+    char* filename = basename(path);
+    if(filename[0] != '.'){
+        struct stat* statbuf = malloc(10000);
+        lstat(path, statbuf);
+        printStat(statbuf, filename, path);
+        free(statbuf);
+    }
 }
 
 void printStat(struct stat* statbuf, char* filename, char* path)
@@ -122,7 +188,9 @@ void printStat(struct stat* statbuf, char* filename, char* path)
         }
 
         struct group* grp = getgrgid(statbuf->st_gid);
-        printf("%-20s", grp->gr_name);
+        if(grp){
+            printf("%-20s", grp->gr_name);
+        }
 
         printf("%-10ld", statbuf->st_size);
 
@@ -135,10 +203,8 @@ void printStat(struct stat* statbuf, char* filename, char* path)
             char* linkbuf = malloc(PATH_MAX);
             readlink(path, linkbuf, PATH_MAX);
             printf(" -> %s", linkbuf);
-
+            free(linkbuf);
         }
     }
     printf("\n");
-
-    free(statbuf);
 }
