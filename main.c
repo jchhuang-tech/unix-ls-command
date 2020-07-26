@@ -37,7 +37,11 @@ int main(int argc, char** args)
     fileCount = 0;
 
     setOptionsFiles(argc, args);
+    // this part needs modificaton
+    // we need to sort the fileList before using any items in it
 
+    // this part needs modification
+    // we need to modify the printing function to ensure there is space ('\n's) between files and directories
     char* pathname = NULL;
     for(int i=0; i<fileCount; i++){
         pathname = fileList[i];
@@ -126,6 +130,9 @@ void listDir(char* path)
             char pathForLongList[PATH_MAX];
             snprintf(pathForLongList, sizeof(pathForLongList), "%s/%s", path, de->d_name);
             lstat(pathForLongList, statbuf);
+            // this part needs modificaton
+            // we need to sort all the entries before printing the info
+            // one way to do it is we put them in an array, sort them after the loop ends, and print their info
             printStat(statbuf, de->d_name, pathForLongList);
             if(recur){
                 if(S_ISDIR(statbuf->st_mode)){
@@ -140,6 +147,8 @@ void listDir(char* path)
     }
     closedir(dirp);
     if(recur){
+        // this part needs modificaton
+        // we need to sort subDirList before recursing on the items
         for(int i=0; i<subDirCount; i++){
             printf("\n%s:\n", subDirList[i]);
             listDir(subDirList[i]);
