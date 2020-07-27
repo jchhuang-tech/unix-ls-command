@@ -223,6 +223,20 @@ void printStat(struct stat* statbuf, char* filename, char* path)
         printf( (S_ISREG(statbuf->st_mode)) ? "-" : "");
         printf( (S_ISDIR(statbuf->st_mode)) ? "d" : "");
         printf( (S_ISLNK(statbuf->st_mode)) ? "l" : "");
+        printf( (S_ISCHR(statbuf->st_mode)) ? "c" : "");
+        printf( (S_ISBLK(statbuf->st_mode)) ? "b" : "");
+        printf( (S_ISSOCK(statbuf->st_mode)) ? "s" : "");
+        printf( (S_ISFIFO(statbuf->st_mode)) ? "p" : "");
+        // if(!S_ISLNK(statbuf->st_mode) && 
+        //     !S_ISDIR(statbuf->st_mode) && 
+        //     !S_ISREG(statbuf->st_mode) && 
+        //     !S_ISCHR(statbuf->st_mode) && 
+        //     !S_ISBLK(statbuf->st_mode) && 
+        //     !S_ISSOCK(statbuf->st_mode) && 
+        //     !S_ISFIFO(statbuf->st_mode)){
+        //     puts("\nSPECIAL FILE!");
+        //     exit(EXIT_FAILURE);
+        // }
 
         printf( (statbuf->st_mode & S_IRUSR) ? "r" : "-");
         printf( (statbuf->st_mode & S_IWUSR) ? "w" : "-");
