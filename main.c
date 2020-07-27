@@ -12,6 +12,7 @@
 #include <limits.h>
 #include <stdbool.h>
 #include <libgen.h>
+#include <ctype.h>
 
 static bool index = false;
 static bool longList = false;
@@ -33,11 +34,10 @@ int main(int argc, char** args)
         exit(EXIT_FAILURE);
     }
 
-    fileList = malloc(sizeof(char*)*argc);
+    fileList = malloc((sizeof(char*))*argc);
     fileCount = 0;
 
     setOptionsFiles(argc, args);
-    // this part needs modificaton
     // we need to sort the fileList before using any items in it
     lexicalSort(fileList, 0, fileCount-1);
 
@@ -65,20 +65,31 @@ int main(int argc, char** args)
 
 void lexicalSort(char** arr, int start, int end)
 {
+    char* lowercase[end-start+1];
+    for(int i=0; i<end-start+1; i++){
+        lowercase[i] = malloc(PATH_MAX);
+        strncpy(lowercase[i], arr[start+i], PATH_MAX);
+    }
+    for(int i=0; i<end-start+1; i++){
+        for(int j=0; j<strlen(lowercase[i]); j++){
+            lowercase[i][j] = tolower(lowercase[i][j]);
+        }
+    }
     char* tmp = NULL;
     for(int i=start; i<=end; i++){
         for(int j=i+1; j<=end; j++){
-            // char* str1 = malloc(PATH_MAX);
-            // strncpy(str1, arr[i]);
-            // char* str2 = malloc(PATH_MAX);
-            // strncpy(str2, arr[j]);
-            // we must make str1 and str2 all lowercase, so we can compare them
-            if(strcmp(arr[i], arr[j]) > 0){
+            if(strcmp(lowercase[i-start], lowercase[j-start]) > 0){
                 tmp = arr[i];
                 arr[i] = arr[j];
                 arr[j] = tmp;
+                tmp = lowercase[i-start];
+                lowercase[i-start] = lowercase[j-start];
+                lowercase[j-start] = tmp;
             }
         }
+    }
+    for(int i=0; i<end-start+1; i++){
+        free(lowercase[i]);
     }
 }
 
@@ -118,7 +129,7 @@ void setOptionsFiles(int argc, char** args)
 
 bool isDir(char* path)
 {
-    struct stat* filesb = malloc(10000);
+    struct stat* filesb = malloc(sizeof(struct stat));
     if (lstat(path, filesb) < 0){
         perror(path);
         exit(EXIT_FAILURE);
@@ -141,10 +152,10 @@ void listDir(char* path)
 
     DIR* dirp = NULL;
     dirp = opendir(path);
-    // if(dirp == NULL){
-    //     perror("cannot find directory");
-    //     return;
-    // }
+    if(dirp == NULL){
+        perror("cannot find directory");
+        return;
+    }
     struct dirent* de = NULL;
     while ((de = readdir(dirp)) != NULL){
         if(de->d_name[0] != '.'){
@@ -154,17 +165,14 @@ void listDir(char* path)
             strncpy(direntPath, pathForLongList, sizeof(pathForLongList));
             direntList[direntCount] = direntPath;
             direntCount++;
-
-
         }
     }
     closedir(dirp);
 
     lexicalSort(direntList, 0, direntCount-1);
     for(int i=0; i<direntCount; i++){
-        struct stat* statbuf = malloc(10000);
+        struct stat* statbuf = malloc(sizeof(struct stat));
         lstat(direntList[i], statbuf);
-        // this part needs modificaton
         // we need to sort all the entries before printing the info
         // one way to do it is we put them in an array, sort them after the loop ends, and print their info
         printStat(statbuf, basename(direntList[i]), direntList[i]);
@@ -183,7 +191,6 @@ void listDir(char* path)
     }
 
     if(recur){
-        // this part needs modificaton
         // we need to sort subDirList before recursing on the items
         lexicalSort(subDirList, 0, subDirCount-1);
         for(int i=0; i<subDirCount; i++){
@@ -200,7 +207,7 @@ void listNonDir(char* path)
 {
     char* filename = basename(path);
     if(filename[0] != '.'){
-        struct stat* statbuf = malloc(10000);
+        struct stat* statbuf = malloc(sizeof(struct stat));
         lstat(path, statbuf);
         printStat(statbuf, filename, path);
         free(statbuf);
@@ -240,7 +247,7 @@ void printStat(struct stat* statbuf, char* filename, char* path)
             printf("%-20s", grp->gr_name);
         }
 
-        printf("%-10ld", statbuf->st_size);
+        printf("%-12ld", statbuf->st_size);
 
         char* mt = ctime(&statbuf->st_mtim.tv_sec);
         printf("%-7.*s%-5.*s%-10.*s", 6, mt+4, 4, mt+20, 5, mt+11);
@@ -250,7 +257,13 @@ void printStat(struct stat* statbuf, char* filename, char* path)
         if(S_ISLNK(statbuf->st_mode)){
             char* linkbuf = malloc(PATH_MAX);
             readlink(path, linkbuf, PATH_MAX);
+            linkbuf[strlen(linkbuf)] = '\0';
+            // this part needs modification
+            // strange characters printed after the link string
+            // if you do "./myls -l /bin" you will see the problem
             printf(" -> %s", linkbuf);
+            // fputs(" -> ", stdout);
+            // fputs(linkbuf, stdout);
             free(linkbuf);
         }
     }
