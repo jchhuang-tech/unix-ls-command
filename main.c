@@ -256,14 +256,16 @@ void printStat(struct stat* statbuf, char* filename, char* path)
     if(longList){
         if(S_ISLNK(statbuf->st_mode)){
             char* linkbuf = malloc(PATH_MAX);
-            readlink(path, linkbuf, PATH_MAX);
-            linkbuf[strlen(linkbuf)] = '\0';
-            // this part needs modification
-            // strange characters printed after the link string
+            ssize_t linklen = readlink(path, linkbuf, PATH_MAX);
+            if (linklen != -1){
+                linkbuf[linklen] = '\0';
+            }else{
+                perror("readlink failed");
+            }
+            // there used to be strange characters printed after the link string
             // if you do "./myls -l /bin" you will see the problem
+            // update: now fixed
             printf(" -> %s", linkbuf);
-            // fputs(" -> ", stdout);
-            // fputs(linkbuf, stdout);
             free(linkbuf);
         }
     }
