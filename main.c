@@ -41,20 +41,25 @@ int main(int argc, char** args)
     // we need to sort the fileList before using any items in it
     lexicalSort(fileList, 0, fileCount-1);
 
-    // this part needs modification
     // we need to modify the printing function to ensure there is space ('\n's) between files and directories
+    bool filesInArgs = false;
     char* pathname = NULL;
+    for(int i=0; i<fileCount; i++){
+        pathname = fileList[i];
+        if(!isDir(pathname)){
+            listNonDir(pathname);
+            filesInArgs = true;
+        }
+    }
+
     for(int i=0; i<fileCount; i++){
         pathname = fileList[i];
         if(isDir(pathname)){
             if(fileCount > 1 || recur){
-                printf( (i==0) ? "" : "\n");
+                printf( (i==0 && !filesInArgs) ? "" : "\n");
                 printf("%s:\n", pathname);
             }
             listDir(pathname);
-        }
-        else{
-            listNonDir(pathname);
         }
     }
 
@@ -153,7 +158,7 @@ void listDir(char* path)
     DIR* dirp = NULL;
     dirp = opendir(path);
     if(dirp == NULL){
-        perror("cannot find directory");
+        perror("cannot open directory");
         return;
     }
     struct dirent* de = NULL;
