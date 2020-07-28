@@ -74,34 +74,15 @@ int main(int argc, char** args)
 
 void lexicalSort(char** arr, int start, int end)
 {
-    // this is a case-insensitive sorting
-    // i am not sure if i should change it back to case-sensitive sorting
-    // we will wait for further clarification
-    char* lowercase[end-start+1];
-    for(int i=0; i<end-start+1; i++){
-        lowercase[i] = malloc(PATH_MAX);
-        strncpy(lowercase[i], arr[start+i], PATH_MAX);
-    }
-    for(int i=0; i<end-start+1; i++){
-        for(int j=0; j<strlen(lowercase[i]); j++){
-            lowercase[i][j] = tolower(lowercase[i][j]);
-        }
-    }
     char* tmp = NULL;
     for(int i=start; i<=end; i++){
         for(int j=i+1; j<=end; j++){
-            if(strcmp(lowercase[i-start], lowercase[j-start]) > 0){
+            if(strcmp(arr[i], arr[j]) > 0){
                 tmp = arr[i];
                 arr[i] = arr[j];
                 arr[j] = tmp;
-                tmp = lowercase[i-start];
-                lowercase[i-start] = lowercase[j-start];
-                lowercase[j-start] = tmp;
             }
         }
-    }
-    for(int i=0; i<end-start+1; i++){
-        free(lowercase[i]);
     }
 }
 
@@ -239,16 +220,6 @@ void printStat(struct stat* statbuf, char* filename, char* path)
         printf( (S_ISBLK(statbuf->st_mode)) ? "b" : "");
         printf( (S_ISSOCK(statbuf->st_mode)) ? "s" : "");
         printf( (S_ISFIFO(statbuf->st_mode)) ? "p" : "");
-        // if(!S_ISLNK(statbuf->st_mode) && 
-        //     !S_ISDIR(statbuf->st_mode) && 
-        //     !S_ISREG(statbuf->st_mode) && 
-        //     !S_ISCHR(statbuf->st_mode) && 
-        //     !S_ISBLK(statbuf->st_mode) && 
-        //     !S_ISSOCK(statbuf->st_mode) && 
-        //     !S_ISFIFO(statbuf->st_mode)){
-        //     puts("\nSPECIAL FILE!");
-        //     exit(EXIT_FAILURE);
-        // }
 
         printf( (statbuf->st_mode & S_IRUSR) ? "r" : "-");
         printf( (statbuf->st_mode & S_IWUSR) ? "w" : "-");
