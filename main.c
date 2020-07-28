@@ -32,6 +32,13 @@ void lexicalSort(char** arr, int start, int end);
 // so that we can minimize the space between the columns.
 // but maybe the format doesn't matter anyways, so we will wait for the clarification.
 
+// we also need one more function to get the max length info
+// we pass a struct and an array of files' pathnames to it and it will fill the struct for us
+// the struct should have the following variables: inoMaxLen, nlinkMaxLen, uidMaxLen, gidMaxLen and sizeMaxLen
+
+// other notes: check each string to see if they are null terminated
+// check return values
+
 int main(int argc, char** args)
 {
     if (argc < 1){
@@ -162,6 +169,11 @@ void listDir(char* path)
     }
     closedir(dirp);
 
+    // this part needs modification
+    // we need to add a loop here
+    // where we go through the direntList and
+    // use a struct to record the max length of the info in each column
+
     lexicalSort(direntList, 0, direntCount-1);
     for(int i=0; i<direntCount; i++){
         struct stat* statbuf = malloc(sizeof(struct stat));
@@ -196,6 +208,10 @@ void listDir(char* path)
     }
 }
 
+// this function needs modification
+// we cannot print them one by one
+// instead we have to put all the files in a list,
+// use a struct to record their info's max length and then print them
 void listNonDir(char* path)
 {
     char* filename = basename(path);
@@ -207,6 +223,7 @@ void listNonDir(char* path)
     }
 }
 
+// we need to pass a struct minLens to the printStat function
 void printStat(struct stat* statbuf, char* filename, char* path)
 {
     if(index){
