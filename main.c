@@ -28,6 +28,10 @@ void listNonDir(char* path);
 void printStat(struct stat* statbuf, char* filename, char* path);
 void lexicalSort(char** arr, int start, int end);
 
+// i am thinking of using a struct to record the max length of the -l info
+// so that we can minimize the space between the columns.
+// but maybe the format doesn't matter anyways, so we will wait for the clarification.
+
 int main(int argc, char** args)
 {
     if (argc < 1){
@@ -70,6 +74,9 @@ int main(int argc, char** args)
 
 void lexicalSort(char** arr, int start, int end)
 {
+    // this is a case-insensitive sorting
+    // i am not sure if i should change it back to case-sensitive sorting
+    // we will wait for further clarification
     char* lowercase[end-start+1];
     for(int i=0; i<end-start+1; i++){
         lowercase[i] = malloc(PATH_MAX);
@@ -222,7 +229,7 @@ void listNonDir(char* path)
 void printStat(struct stat* statbuf, char* filename, char* path)
 {
     if(index){
-        printf("%-30ld", statbuf->st_ino);
+        printf("%-30ju", statbuf->st_ino);
     }
     if(longList){
         printf( (S_ISREG(statbuf->st_mode)) ? "-" : "");
@@ -254,7 +261,7 @@ void printStat(struct stat* statbuf, char* filename, char* path)
         printf( (statbuf->st_mode & S_IXOTH) ? "x" : "-");
         printf("     ");
 
-        printf("%-7ld", statbuf->st_nlink);
+        printf("%-7ju", statbuf->st_nlink);
         
         struct passwd* pw = getpwuid(statbuf->st_uid);
         if(pw){
@@ -266,7 +273,7 @@ void printStat(struct stat* statbuf, char* filename, char* path)
             printf("%-20s", grp->gr_name);
         }
 
-        printf("%-12ld", statbuf->st_size);
+        printf("%-12ju", statbuf->st_size);
 
         char* mt = ctime(&statbuf->st_mtim.tv_sec);
         printf("%-7.*s%-5.*s%-10.*s", 6, mt+4, 4, mt+20, 5, mt+11);
@@ -274,14 +281,14 @@ void printStat(struct stat* statbuf, char* filename, char* path)
     printf("%s", filename);
     if(longList){
         if(S_ISLNK(statbuf->st_mode)){
-            char* linkbuf = malloc(PATH_MAX);
+            char* linkbuf = malloc(PATH_MAX+1);
             ssize_t linklen = readlink(path, linkbuf, PATH_MAX);
             if (linklen != -1){
                 linkbuf[linklen] = '\0';
             }else{
                 perror("readlink failed");
             }
-            // there used to be strange characters printed after the link string
+            // strange characters printed after the link string
             // if you do "./myls -l /bin" you will see the problem
             // update: now fixed
             printf(" -> %s", linkbuf);
