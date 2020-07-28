@@ -21,12 +21,22 @@ static bool recur = false;
 static char** fileList = NULL;
 static int fileCount = 0;
 
+struct maxlengths
+{
+    int inoMaxLen;
+    int nlinkMaxLen;
+    int uidMaxLen;
+    int gidMaxLen;
+    int sizeMaxLen;
+};
+
 void setOptionsFiles(int argc, char** args);
 bool isDir(char* path);
 void listDir(char* path);
 void listNonDir(char* path);
 void printStat(struct stat* statbuf, char* filename, char* path);
 void lexicalSort(char** arr, int start, int end);
+void getMaxLen(char* path, struct maxlengths* maxlenbuf);
 
 // i am thinking of using a struct to record the max length of the -l info
 // so that we can minimize the space between the columns.
@@ -156,11 +166,14 @@ void listDir(char* path)
         perror("cannot open directory");
         return;
     }
+    struct maxlengths* maxlenbuf = malloc(sizeof(struct maxlengths));
+    memset(maxlenbuf, 0, sizeof(struct maxlengths));
     struct dirent* de = NULL;
     while ((de = readdir(dirp)) != NULL){
         if(de->d_name[0] != '.'){
             char pathForLongList[PATH_MAX];
             snprintf(pathForLongList, sizeof(pathForLongList), "%s/%s", path, de->d_name);
+            getMaxLen(pathForLongList, maxlenbuf);
             char* direntPath = malloc(PATH_MAX);
             strncpy(direntPath, pathForLongList, sizeof(pathForLongList));
             direntList[direntCount] = direntPath;
@@ -284,4 +297,31 @@ void printStat(struct stat* statbuf, char* filename, char* path)
         }
     }
     printf("\n");
+}
+
+void getMaxLen(char* path, struct maxlengths* maxlenbuf)
+{
+    struct stat* statbuf = malloc(sizeof(struct stat));
+    lstat(path, statbuf);
+
+    // inoMaxLen
+    // nlinkMaxLen
+
+    struct passwd* pw = getpwuid(statbuf->st_uid);
+    if(pw){
+        if(strlen(pw->pw_name) > maxlenbuf->uidMaxLen){
+            maxlenbuf->uidMaxLen = strlen(pw->pw_name);
+        }
+    }
+
+    struct group* grp = getgrgid(statbuf->st_gid);
+    if(grp){
+        if(strlen(grp->gr_name) > maxlenbuf->gidMaxLen){
+            maxlenbuf->uidMaxLen = strlen(grp->gr_name);
+        }
+    }
+
+    // sizeMaxLen
+
+    free(statbuf);
 }
