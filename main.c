@@ -36,7 +36,8 @@ void listDir(char* path);
 void listNonDir(char* path);
 void printStat(struct stat* statbuf, char* filename, char* path);
 void lexicalSort(char** arr, int start, int end);
-void getMaxLen(char* path, struct maxlengths* maxlenbuf);
+void updateMaxLen(char* path, struct maxlengths* maxlenbuf);
+int numLen(unsigned num);
 
 // i am thinking of using a struct to record the max length of the -l info
 // so that we can minimize the space between the columns.
@@ -173,7 +174,7 @@ void listDir(char* path)
         if(de->d_name[0] != '.'){
             char pathForLongList[PATH_MAX];
             snprintf(pathForLongList, sizeof(pathForLongList), "%s/%s", path, de->d_name);
-            getMaxLen(pathForLongList, maxlenbuf);
+            updateMaxLen(pathForLongList, maxlenbuf);
             char* direntPath = malloc(PATH_MAX);
             strncpy(direntPath, pathForLongList, sizeof(pathForLongList));
             direntList[direntCount] = direntPath;
@@ -299,7 +300,7 @@ void printStat(struct stat* statbuf, char* filename, char* path)
     printf("\n");
 }
 
-void getMaxLen(char* path, struct maxlengths* maxlenbuf)
+void updateMaxLen(char* path, struct maxlengths* maxlenbuf)
 {
     struct stat* statbuf = malloc(sizeof(struct stat));
     lstat(path, statbuf);
@@ -324,4 +325,9 @@ void getMaxLen(char* path, struct maxlengths* maxlenbuf)
     // sizeMaxLen
 
     free(statbuf);
+}
+
+int numLen(unsigned num)
+{
+    return 0;
 }
