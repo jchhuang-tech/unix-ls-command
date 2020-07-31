@@ -73,10 +73,7 @@ int main(int argc, char** args)
     // we need to modify the printing function to ensure there is space ('\n's) between files and directories
     bool filesInArgs = false;
     char* pathname = NULL;
-<<<<<<< HEAD
-    
-=======
-    maxlenbuf = malloc(sizeof(struct maxlengths));
+    struct maxlengths* maxlenbuf = malloc(sizeof(struct maxlengths));
     memset(maxlenbuf, 0, sizeof(struct maxlengths));
 
     for(int i=0; i<fileCount; i++){
@@ -87,15 +84,22 @@ int main(int argc, char** args)
         }
     }
 
->>>>>>> d50cb582738b326146f54d223f01eeb66713b748
     for(int i=0; i<fileCount; i++){
         pathname = fileList[i];
         if(!isDir(pathname)){
-            // printf("6");
-            listNonDir(pathname);
+            // listNonDir(pathname);
             filesInArgs = true;
+            char* filename = basename(pathname);
+            if(filename[0] != '.'){
+                struct stat* statbuf = malloc(sizeof(struct stat));
+                lstat(pathname, statbuf);
+                printStat(statbuf, pathname, pathname, maxlenbuf);
+                free(statbuf);
+            }
         }
     }
+
+    free(maxlenbuf);
 
     for(int i=0; i<fileCount; i++){
         pathname = fileList[i];
@@ -235,7 +239,6 @@ void listDir(char* path)
         // one way to do it is we put them in an array, sort them after the loop ends, and print their info
         printStat(statbuf, basename(direntList[i]), direntList[i], maxlenbuf);
 
-        free(maxlenbuf);
 
         if(recur){
             if(S_ISDIR(statbuf->st_mode)){
@@ -248,6 +251,7 @@ void listDir(char* path)
 
         free(statbuf);
     }
+    free(maxlenbuf);
     for(int i=0; i<direntCount; i++){
         free(direntList[i]);
     }
@@ -272,24 +276,20 @@ void listDir(char* path)
 // use a struct to record their info's max length and then print them
 void listNonDir(char* path)
 {
-    char* filename = basename(path);
+    // char* filename = basename(path);
 
-    struct maxlengths* maxlenbuf;
-    maxlenbuf = malloc(sizeof(struct maxlengths));
-    memset(maxlenbuf, 0, sizeof(struct maxlengths));
+    // // struct maxlengths* maxlenbuf;
+    // // maxlenbuf = malloc(sizeof(struct maxlengths));
+    // // memset(maxlenbuf, 0, sizeof(struct maxlengths));
 
-    if(filename[0] != '.'){
-        updateMaxLen(pathForLongList, maxlenbuf);
-        struct stat* statbuf = malloc(sizeof(struct stat));
-        lstat(path, statbuf);
-<<<<<<< HEAD
-        printStat(statbuf, filename, path,maxlenbuf);
-        free(maxlenbuf);
-=======
-        printStat(statbuf, path, path);
->>>>>>> d50cb582738b326146f54d223f01eeb66713b748
-        free(statbuf);
-    }
+    // if(filename[0] != '.'){
+    //     // updateMaxLen(pathForLongList, maxlenbuf);
+    //     struct stat* statbuf = malloc(sizeof(struct stat));
+    //     lstat(path, statbuf);
+    //     printStat(statbuf, path, path, maxlenbuf);
+    //     // free(maxlenbuf);
+    //     free(statbuf);
+    // }
 }
 
 // we need to pass a struct minLens to the printStat function
@@ -385,13 +385,8 @@ void updateMaxLen(char* path, struct maxlengths* maxlenbuf)
         maxlenbuf->nlinkMaxLen = floor(log10(statbuf->st_nlink)) + 1;
         // printf("nlinklen: %d of nlink: %ju", floor(log10(statbuf->st_size)) + 1, )
     }
-<<<<<<< HEAD
-    //  printf("3");
-     struct passwd* pw = getpwuid(statbuf->st_uid);
-=======
 
     struct passwd* pw = getpwuid(statbuf->st_uid);
->>>>>>> d50cb582738b326146f54d223f01eeb66713b748
     if(pw){
         if(strlen(pw->pw_name) > maxlenbuf->uidMaxLen){
             maxlenbuf->uidMaxLen = strlen(pw->pw_name);
