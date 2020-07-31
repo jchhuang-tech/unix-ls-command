@@ -13,6 +13,7 @@
 #include <stdbool.h>
 #include <libgen.h>
 #include <ctype.h>
+#include <math.h>
 
 static bool index = false;
 static bool longList = false;
@@ -30,6 +31,7 @@ struct maxlengths
     int sizeMaxLen;
 };
 
+
 void setOptionsFiles(int argc, char** args);
 bool isDir(char* path);
 void listDir(char* path);
@@ -38,6 +40,10 @@ void printStat(struct stat* statbuf, char* filename, char* path);
 void lexicalSort(char** arr, int start, int end);
 void updateMaxLen(char* path, struct maxlengths* maxlenbuf);
 int numLen(unsigned num);
+
+//------changed here----------------//
+//must be global for updateMaxlen()
+struct maxlengths* maxlenbuf;
 
 // i am thinking of using a struct to record the max length of the -l info
 // so that we can minimize the space between the columns.
@@ -154,6 +160,7 @@ bool isDir(char* path)
     }
 }
 
+
 void listDir(char* path)
 {
     char* direntList[10000];
@@ -167,7 +174,9 @@ void listDir(char* path)
         perror("cannot open directory");
         return;
     }
-    struct maxlengths* maxlenbuf = malloc(sizeof(struct maxlengths));
+    //------changed here----------------//
+    //set maxlenbuf to global
+    maxlenbuf = malloc(sizeof(struct maxlengths));
     memset(maxlenbuf, 0, sizeof(struct maxlengths));
     struct dirent* de = NULL;
     while ((de = readdir(dirp)) != NULL){
@@ -241,7 +250,8 @@ void listNonDir(char* path)
 void printStat(struct stat* statbuf, char* filename, char* path)
 {
     if(index){
-        printf("%-30ju", statbuf->st_ino);
+        //---------changed to maxlength---------------------------//
+        printf("%*ju ", maxlenbuf->inoMaxLen, statbuf->st_ino);
     }
     if(longList){
         printf( (S_ISREG(statbuf->st_mode)) ? "-" : "");
@@ -261,24 +271,28 @@ void printStat(struct stat* statbuf, char* filename, char* path)
         printf( (statbuf->st_mode & S_IROTH) ? "r" : "-");
         printf( (statbuf->st_mode & S_IWOTH) ? "w" : "-");
         printf( (statbuf->st_mode & S_IXOTH) ? "x" : "-");
-        printf("     ");
+        // printf(" ");
 
-        printf("%-7ju", statbuf->st_nlink);
+        // ---------changed to maxlength---------------------------//
+        // problem here: calculate one more 
+        printf("%*ju ",maxlenbuf->nlinkMaxLen, statbuf->st_nlink);
         
         struct passwd* pw = getpwuid(statbuf->st_uid);
         if(pw){
-            printf("%-15s", pw->pw_name);
+            //---------changed to maxlength---------------------------//
+            printf("%-*s ",maxlenbuf->uidMaxLen, pw->pw_name);
         }
 
         struct group* grp = getgrgid(statbuf->st_gid);
         if(grp){
-            printf("%-20s", grp->gr_name);
+            //---------changed to maxlength---------------------------//
+            printf("%-*s ",maxlenbuf->gidMaxLen, grp->gr_name);
         }
-
-        printf("%-12ju", statbuf->st_size);
+        // ---------changed to maxlength---------------------------//
+        printf("%*ju ",maxlenbuf->sizeMaxLen, statbuf->st_size);
 
         char* mt = ctime(&statbuf->st_mtim.tv_sec);
-        printf("%-7.*s%-5.*s%-10.*s", 6, mt+4, 4, mt+20, 5, mt+11);
+        printf("%-7.*s%-5.*s%-6.*s", 6, mt+4, 4, mt+20, 5, mt+11);
     }
     printf("%s", filename);
     if(longList){
@@ -306,23 +320,41 @@ void updateMaxLen(char* path, struct maxlengths* maxlenbuf)
     lstat(path, statbuf);
 
     // inoMaxLen
-    // nlinkMaxLen
+    //---------update---------------------------//
+    if ((floor(log10(statbuf->st_ino)) + 1) > maxlenbuf->inoMaxLen)
+    {
+        maxlenbuf->inoMaxLen = floor(log10(statbuf->st_ino)) + 1;
+    }
 
-    struct passwd* pw = getpwuid(statbuf->st_uid);
+    // nlinkMaxLen
+    //---------update---------------------------//
+    if ((floor(log10(statbuf->st_size))+ 1) >  maxlenbuf->nlinkMaxLen)
+    {
+        maxlenbuf->nlinkMaxLen = floor(log10(statbuf->st_size)) + 1;
+    }
+
+     struct passwd* pw = getpwuid(statbuf->st_uid);
     if(pw){
         if(strlen(pw->pw_name) > maxlenbuf->uidMaxLen){
             maxlenbuf->uidMaxLen = strlen(pw->pw_name);
+            // printf("Len: %ld for name: %s\n", strlen(grp->gr_name),grp->gr_name);
         }
     }
 
     struct group* grp = getgrgid(statbuf->st_gid);
     if(grp){
         if(strlen(grp->gr_name) > maxlenbuf->gidMaxLen){
-            maxlenbuf->uidMaxLen = strlen(grp->gr_name);
+            maxlenbuf->gidMaxLen = strlen(grp->gr_name);
+            // printf("Len: %ld for gr_name: %s\n", strlen(grp->gr_name),grp->gr_name);
         }
     }
 
-    // sizeMaxLen
+    // sizeMaxLen   
+    //---------update---------------------------//
+    if ((floor(log10(statbuf->st_size)) + 1) > maxlenbuf->sizeMaxLen)
+    {
+        maxlenbuf->sizeMaxLen = floor(log10(statbuf->st_size)) + 1;
+    }
 
     free(statbuf);
 }
