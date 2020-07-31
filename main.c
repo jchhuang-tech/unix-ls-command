@@ -274,7 +274,6 @@ void printStat(struct stat* statbuf, char* filename, char* path)
         // printf(" ");
 
         // ---------changed to maxlength---------------------------//
-        // problem here: calculate one more 
         printf("%*ju ",maxlenbuf->nlinkMaxLen+1, statbuf->st_nlink);
         
         struct passwd* pw = getpwuid(statbuf->st_uid);
