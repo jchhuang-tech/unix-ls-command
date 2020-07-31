@@ -72,6 +72,17 @@ int main(int argc, char** args)
     // we need to modify the printing function to ensure there is space ('\n's) between files and directories
     bool filesInArgs = false;
     char* pathname = NULL;
+    maxlenbuf = malloc(sizeof(struct maxlengths));
+    memset(maxlenbuf, 0, sizeof(struct maxlengths));
+
+    for(int i=0; i<fileCount; i++){
+        pathname = fileList[i];
+        if(!isDir(pathname)){
+            updateMaxLen(pathname, maxlenbuf);
+            filesInArgs = true;
+        }
+    }
+
     for(int i=0; i<fileCount; i++){
         pathname = fileList[i];
         if(!isDir(pathname)){
@@ -337,7 +348,7 @@ void updateMaxLen(char* path, struct maxlengths* maxlenbuf)
         // printf("nlinklen: %d of nlink: %ju", floor(log10(statbuf->st_size)) + 1, )
     }
 
-     struct passwd* pw = getpwuid(statbuf->st_uid);
+    struct passwd* pw = getpwuid(statbuf->st_uid);
     if(pw){
         if(strlen(pw->pw_name) > maxlenbuf->uidMaxLen){
             maxlenbuf->uidMaxLen = strlen(pw->pw_name);
