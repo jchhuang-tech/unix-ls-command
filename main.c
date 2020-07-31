@@ -92,6 +92,7 @@ int main(int argc, char** args)
     }
 
     free(fileList);
+    free(maxlenbuf);
     
     return 0;
 }
