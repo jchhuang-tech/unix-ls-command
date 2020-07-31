@@ -73,7 +73,21 @@ int main(int argc, char** args)
     // we need to modify the printing function to ensure there is space ('\n's) between files and directories
     bool filesInArgs = false;
     char* pathname = NULL;
+<<<<<<< HEAD
     
+=======
+    maxlenbuf = malloc(sizeof(struct maxlengths));
+    memset(maxlenbuf, 0, sizeof(struct maxlengths));
+
+    for(int i=0; i<fileCount; i++){
+        pathname = fileList[i];
+        if(!isDir(pathname)){
+            updateMaxLen(pathname, maxlenbuf);
+            filesInArgs = true;
+        }
+    }
+
+>>>>>>> d50cb582738b326146f54d223f01eeb66713b748
     for(int i=0; i<fileCount; i++){
         pathname = fileList[i];
         if(!isDir(pathname)){
@@ -268,8 +282,12 @@ void listNonDir(char* path)
         updateMaxLen(pathForLongList, maxlenbuf);
         struct stat* statbuf = malloc(sizeof(struct stat));
         lstat(path, statbuf);
+<<<<<<< HEAD
         printStat(statbuf, filename, path,maxlenbuf);
         free(maxlenbuf);
+=======
+        printStat(statbuf, path, path);
+>>>>>>> d50cb582738b326146f54d223f01eeb66713b748
         free(statbuf);
     }
 }
@@ -367,8 +385,13 @@ void updateMaxLen(char* path, struct maxlengths* maxlenbuf)
         maxlenbuf->nlinkMaxLen = floor(log10(statbuf->st_nlink)) + 1;
         // printf("nlinklen: %d of nlink: %ju", floor(log10(statbuf->st_size)) + 1, )
     }
+<<<<<<< HEAD
     //  printf("3");
      struct passwd* pw = getpwuid(statbuf->st_uid);
+=======
+
+    struct passwd* pw = getpwuid(statbuf->st_uid);
+>>>>>>> d50cb582738b326146f54d223f01eeb66713b748
     if(pw){
         if(strlen(pw->pw_name) > maxlenbuf->uidMaxLen){
             maxlenbuf->uidMaxLen = strlen(pw->pw_name);
