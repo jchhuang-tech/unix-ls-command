@@ -275,7 +275,7 @@ void printStat(struct stat* statbuf, char* filename, char* path)
 
         // ---------changed to maxlength---------------------------//
         // problem here: calculate one more 
-        printf("%*ju ",maxlenbuf->nlinkMaxLen, statbuf->st_nlink);
+        printf("%*ju ",maxlenbuf->nlinkMaxLen+1, statbuf->st_nlink);
         
         struct passwd* pw = getpwuid(statbuf->st_uid);
         if(pw){
@@ -328,9 +328,10 @@ void updateMaxLen(char* path, struct maxlengths* maxlenbuf)
 
     // nlinkMaxLen
     //---------update---------------------------//
-    if ((floor(log10(statbuf->st_size))+ 1) >  maxlenbuf->nlinkMaxLen)
+    if ((floor(log10(statbuf->st_nlink))+ 1) >  maxlenbuf->nlinkMaxLen)
     {
-        maxlenbuf->nlinkMaxLen = floor(log10(statbuf->st_size)) + 1;
+        maxlenbuf->nlinkMaxLen = floor(log10(statbuf->st_nlink)) + 1;
+        // printf("nlinklen: %d of nlink: %ju", floor(log10(statbuf->st_size)) + 1, )
     }
 
      struct passwd* pw = getpwuid(statbuf->st_uid);
