@@ -318,7 +318,7 @@ void updateMaxLen(char* path, struct maxlengths* maxlenbuf)
     struct group* grp = getgrgid(statbuf->st_gid);
     if(grp){
         if(strlen(grp->gr_name) > maxlenbuf->gidMaxLen){
-            maxlenbuf->uidMaxLen = strlen(grp->gr_name);
+            maxlenbuf->gidMaxLen = strlen(grp->gr_name);
         }
     }
 
