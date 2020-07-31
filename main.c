@@ -271,10 +271,10 @@ void printStat(struct stat* statbuf, char* filename, char* path)
         printf( (statbuf->st_mode & S_IROTH) ? "r" : "-");
         printf( (statbuf->st_mode & S_IWOTH) ? "w" : "-");
         printf( (statbuf->st_mode & S_IXOTH) ? "x" : "-");
-        // printf(" ");
+        printf(" ");
 
         // ---------changed to maxlength---------------------------//
-        printf("%*ju ",maxlenbuf->nlinkMaxLen+1, statbuf->st_nlink);
+        printf("%*ju ",maxlenbuf->nlinkMaxLen, statbuf->st_nlink);
         
         struct passwd* pw = getpwuid(statbuf->st_uid);
         if(pw){
