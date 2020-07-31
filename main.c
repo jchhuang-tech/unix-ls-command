@@ -250,7 +250,7 @@ void listNonDir(char* path)
     if(filename[0] != '.'){
         struct stat* statbuf = malloc(sizeof(struct stat));
         lstat(path, statbuf);
-        printStat(statbuf, filename, path);
+        printStat(statbuf, path, path);
         free(statbuf);
     }
 }
