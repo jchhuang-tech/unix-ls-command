@@ -39,7 +39,7 @@ void listNonDir(char* path);
 void printStat(struct stat* statbuf, char* filename, char* path,struct maxlengths* maxlenbuf);
 void lexicalSort(char** arr, int start, int end);
 void updateMaxLen(char* path, struct maxlengths* maxlenbuf);
-int numLen(unsigned num);
+int numLen(__uintmax_t num);
 
 //------changed here----------------//
 //must be global for updateMaxlen()
@@ -376,6 +376,9 @@ void updateMaxLen(char* path, struct maxlengths* maxlenbuf)
     if (numLen(statbuf->st_ino) > maxlenbuf->inoMaxLen)
     {
         maxlenbuf->inoMaxLen = numLen(statbuf->st_ino);
+        // printf("%ju\n", statbuf->st_ino);
+
+        // printf("%f", (floor(log10(statbuf->st_ino)) + 1));
     }
     //  printf("2");
     // nlinkMaxLen
@@ -412,11 +415,13 @@ void updateMaxLen(char* path, struct maxlengths* maxlenbuf)
     free(statbuf);
 }
 
-int numLen(unsigned num)
+int numLen(__uintmax_t num)
 {
     if (num == 0){
         return 1;
-    }else{
-        return floor(log10(num)) + 1;
+    }
+    else{
+        // printf("leng of %lu: %f\n", num, floor(log10(num)) + 1);
+        return (int)(floor(log10(num)) + 1);
     }
 }
