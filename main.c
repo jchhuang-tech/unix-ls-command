@@ -35,42 +35,23 @@ struct maxlengths
 void setOptionsFiles(int argc, char** args);
 bool isDir(char* path);
 void listDir(char* path);
-void listNonDir(char* path);
 void printStat(struct stat* statbuf, char* filename, char* path,struct maxlengths* maxlenbuf);
 void lexicalSort(char** arr, int start, int end);
 void updateMaxLen(char* path, struct maxlengths* maxlenbuf);
 int numLen(__uintmax_t num);
 
-//------changed here----------------//
-//must be global for updateMaxlen()
-// struct maxlengths* maxlenbuf;
-
-//update: fixed
-// i am thinking of using a struct to record the max length of the -l info
-// so that we can minimize the space between the columns.
-// but maybe the format doesn't matter anyways, so we will wait for the clarification.
-// we also need one more function to get the max length info
-// we pass a struct and an array of files' pathnames to it and it will fill the struct for us
-// the struct should have the following variables: inoMaxLen, nlinkMaxLen, uidMaxLen, gidMaxLen and sizeMaxLen
-
-// other notes: check each string to see if they are null terminated
-// check return values
 
 int main(int argc, char** args)
 {
-    // printf("0");
     if (argc < 1){
         exit(EXIT_FAILURE);
     }
 
     fileList = malloc((sizeof(char*))*argc);
-    
 
     setOptionsFiles(argc, args);
-    // we need to sort the fileList before using any items in it
     lexicalSort(fileList, 0, fileCount-1);
 
-    // we need to modify the printing function to ensure there is space ('\n's) between files and directories
     bool filesInArgs = false;
     char* pathname = NULL;
     struct maxlengths* maxlenbuf = malloc(sizeof(struct maxlengths));
@@ -87,7 +68,6 @@ int main(int argc, char** args)
     for(int i=0; i<fileCount; i++){
         pathname = fileList[i];
         if(!isDir(pathname)){
-            // listNonDir(pathname);
             filesInArgs = true;
             char* filename = basename(pathname);
             if(filename[0] != '.'){
@@ -113,7 +93,6 @@ int main(int argc, char** args)
     }
 
     free(fileList);
-    // free(maxlenbuf);
     
     return 0;
 }
@@ -121,11 +100,8 @@ int main(int argc, char** args)
 void lexicalSort(char** arr, int start, int end)
 {
     char* tmp = NULL;
-
     for(int i=start; i<=end; i++){
-
         for(int j=i+1; j<=end; j++){
-
             if(strcmp(arr[i], arr[j]) > 0){
                 tmp = arr[i];
                 arr[i] = arr[j];
@@ -137,16 +113,10 @@ void lexicalSort(char** arr, int start, int end)
 
 void setOptionsFiles(int argc, char** args)
 {
-    // we must allow a file or directory to start with '-' if it's listed after another file/directory
-    // we must treat every argument after the first file/dir argument as a file/dir argument instead of an option
     bool optionListEnded = false;
-
     for(int i=1; i<argc; i++){
-
         if(args[i][0] == '-' && !optionListEnded){
-
             for(int j=1; j<strlen(args[i]); j++){
-
                 if(args[i][j] == 'i'){
                     index = true;
                 }else if(args[i][j] == 'l'){
@@ -175,12 +145,10 @@ void setOptionsFiles(int argc, char** args)
 bool isDir(char* path)
 {
     struct stat* filesb = malloc(sizeof(struct stat));
-
     if (lstat(path, filesb) < 0){
         perror(path);
         exit(EXIT_FAILURE);
     }
-
     if(S_ISDIR(filesb->st_mode)){
         free(filesb);
         return true;
@@ -189,7 +157,6 @@ bool isDir(char* path)
         return false;
     }
 }
-
 
 void listDir(char* path)
 {
@@ -205,8 +172,6 @@ void listDir(char* path)
         perror("cannot open directory");
         return;
     }
-    //------changed here----------------//
-    //set maxlenbuf to global
 
     struct maxlengths* maxlenbuf;
     maxlenbuf = malloc(sizeof(struct maxlengths));
@@ -235,10 +200,7 @@ void listDir(char* path)
     for(int i=0; i<direntCount; i++){
         struct stat* statbuf = malloc(sizeof(struct stat));
         lstat(direntList[i], statbuf);
-        // we need to sort all the entries before printing the info
-        // one way to do it is we put them in an array, sort them after the loop ends, and print their info
         printStat(statbuf, basename(direntList[i]), direntList[i], maxlenbuf);
-
 
         if(recur){
             if(S_ISDIR(statbuf->st_mode)){
@@ -257,7 +219,6 @@ void listDir(char* path)
     }
 
     if(recur){
-        // we need to sort subDirList before recursing on the items
         lexicalSort(subDirList, 0, subDirCount-1);
         for(int i=0; i<subDirCount; i++){
             printf("\n%s:\n", subDirList[i]);
@@ -269,34 +230,9 @@ void listDir(char* path)
     }
 }
 
-//update: fixed
-// this function needs modification
-// we cannot print them one by one
-// instead we have to put all the files in a list,
-// use a struct to record their info's max length and then print them
-void listNonDir(char* path)
-{
-    // char* filename = basename(path);
-
-    // // struct maxlengths* maxlenbuf;
-    // // maxlenbuf = malloc(sizeof(struct maxlengths));
-    // // memset(maxlenbuf, 0, sizeof(struct maxlengths));
-
-    // if(filename[0] != '.'){
-    //     // updateMaxLen(pathForLongList, maxlenbuf);
-    //     struct stat* statbuf = malloc(sizeof(struct stat));
-    //     lstat(path, statbuf);
-    //     printStat(statbuf, path, path, maxlenbuf);
-    //     // free(maxlenbuf);
-    //     free(statbuf);
-    // }
-}
-
-// we need to pass a struct minLens to the printStat function
 void printStat(struct stat* statbuf, char* filename, char* path,struct maxlengths* maxlenbuf)
 {
     if(index){
-        //---------changed to maxlength---------------------------//
         printf("%*ju ", maxlenbuf->inoMaxLen, statbuf->st_ino);
     }
     if(longList){
@@ -319,21 +255,17 @@ void printStat(struct stat* statbuf, char* filename, char* path,struct maxlength
         printf( (statbuf->st_mode & S_IXOTH) ? "x" : "-");
         printf(" ");
 
-        // ---------changed to maxlength---------------------------//
         printf("%*ju ",maxlenbuf->nlinkMaxLen, statbuf->st_nlink);
         
         struct passwd* pw = getpwuid(statbuf->st_uid);
         if(pw){
-            //---------changed to maxlength---------------------------//
             printf("%-*s ",maxlenbuf->uidMaxLen, pw->pw_name);
         }
 
         struct group* grp = getgrgid(statbuf->st_gid);
         if(grp){
-            //---------changed to maxlength---------------------------//
             printf("%-*s ",maxlenbuf->gidMaxLen, grp->gr_name);
         }
-        // ---------changed to maxlength---------------------------//
         printf("%*ju ",maxlenbuf->sizeMaxLen, statbuf->st_size);
 
         char* mt = ctime(&statbuf->st_mtim.tv_sec);
@@ -349,9 +281,6 @@ void printStat(struct stat* statbuf, char* filename, char* path,struct maxlength
             }else{
                 perror("readlink failed");
             }
-            // strange characters printed after the link string
-            // if you do "./myls -l /bin" you will see the problem
-            // update: now fixed
             printf(" -> %s", linkbuf);
             free(linkbuf);
         }
@@ -359,59 +288,36 @@ void printStat(struct stat* statbuf, char* filename, char* path,struct maxlength
     printf("\n");
 }
 
-//update: fixed
-    // this part needs modification
-    // we need to add a loop here
-    // where we go through the direntList and
-    // use a struct to record the max length of the info in each column
-
 void updateMaxLen(char* path, struct maxlengths* maxlenbuf)
 {
     struct stat* statbuf = malloc(sizeof(struct stat));
     lstat(path, statbuf);
 
-    // inoMaxLen
-    //---------update---------------------------//
-    // printf("1");
     if (numLen(statbuf->st_ino) > maxlenbuf->inoMaxLen)
     {
         maxlenbuf->inoMaxLen = numLen(statbuf->st_ino);
-        // printf("%ju\n", statbuf->st_ino);
-
-        // printf("%f", (floor(log10(statbuf->st_ino)) + 1));
     }
-    //  printf("2");
-    // nlinkMaxLen
-    //---------update---------------------------//
     if (numLen(statbuf->st_nlink) >  maxlenbuf->nlinkMaxLen)
     {
         maxlenbuf->nlinkMaxLen = numLen(statbuf->st_nlink);
-        // printf("nlinklen: %d of nlink: %ju", floor(log10(statbuf->st_size)) + 1, )
     }
 
     struct passwd* pw = getpwuid(statbuf->st_uid);
     if(pw){
         if(strlen(pw->pw_name) > maxlenbuf->uidMaxLen){
             maxlenbuf->uidMaxLen = strlen(pw->pw_name);
-            // printf("Len: %ld for name: %s\n", strlen(grp->gr_name),grp->gr_name);
         }
     }
-    //  printf("4");
     struct group* grp = getgrgid(statbuf->st_gid);
     if(grp){
         if(strlen(grp->gr_name) > maxlenbuf->gidMaxLen){
             maxlenbuf->gidMaxLen = strlen(grp->gr_name);
-            // printf("Len: %ld for gr_name: %s\n", strlen(grp->gr_name),grp->gr_name);
         }
     }
-    //  printf("5");
-    // sizeMaxLen   
-    //---------update---------------------------//
     if (numLen(statbuf->st_size) > maxlenbuf->sizeMaxLen)
     {
         maxlenbuf->sizeMaxLen = numLen(statbuf->st_size);
     }
-    //  printf("6");
     free(statbuf);
 }
 
@@ -421,7 +327,6 @@ int numLen(__uintmax_t num)
         return 1;
     }
     else{
-        // printf("leng of %lu: %f\n", num, floor(log10(num)) + 1);
         return (int)(floor(log10(num)) + 1);
     }
 }
