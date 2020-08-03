@@ -373,16 +373,16 @@ void updateMaxLen(char* path, struct maxlengths* maxlenbuf)
     // inoMaxLen
     //---------update---------------------------//
     // printf("1");
-    if ((floor(log10(statbuf->st_ino)) + 1) > maxlenbuf->inoMaxLen)
+    if (numLen(statbuf->st_ino) > maxlenbuf->inoMaxLen)
     {
-        maxlenbuf->inoMaxLen = floor(log10(statbuf->st_ino)) + 1;
+        maxlenbuf->inoMaxLen = numLen(statbuf->st_ino);
     }
     //  printf("2");
     // nlinkMaxLen
     //---------update---------------------------//
-    if ((floor(log10(statbuf->st_nlink))+ 1) >  maxlenbuf->nlinkMaxLen)
+    if (numLen(statbuf->st_nlink) >  maxlenbuf->nlinkMaxLen)
     {
-        maxlenbuf->nlinkMaxLen = floor(log10(statbuf->st_nlink)) + 1;
+        maxlenbuf->nlinkMaxLen = numLen(statbuf->st_nlink);
         // printf("nlinklen: %d of nlink: %ju", floor(log10(statbuf->st_size)) + 1, )
     }
 
@@ -404,9 +404,9 @@ void updateMaxLen(char* path, struct maxlengths* maxlenbuf)
     //  printf("5");
     // sizeMaxLen   
     //---------update---------------------------//
-    if ((floor(log10(statbuf->st_size)) + 1) > maxlenbuf->sizeMaxLen)
+    if (numLen(statbuf->st_size) > maxlenbuf->sizeMaxLen)
     {
-        maxlenbuf->sizeMaxLen = floor(log10(statbuf->st_size)) + 1;
+        maxlenbuf->sizeMaxLen = numLen(statbuf->st_size);
     }
     //  printf("6");
     free(statbuf);
@@ -414,5 +414,9 @@ void updateMaxLen(char* path, struct maxlengths* maxlenbuf)
 
 int numLen(unsigned num)
 {
-    return 0;
+    if (num == 0){
+        return 1;
+    }else{
+        return floor(log10(num)) + 1;
+    }
 }
