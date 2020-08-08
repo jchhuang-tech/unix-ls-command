@@ -56,12 +56,16 @@ int main(int argc, char** args)
     char* pathname = NULL;
     struct maxlengths* maxlenbuf = malloc(sizeof(struct maxlengths));
     memset(maxlenbuf, 0, sizeof(struct maxlengths));
+    bool quotesInFiles = false;
 
     for(int i=0; i<fileCount; i++){
         pathname = fileList[i];
         if(!isDir(pathname)){
             updateMaxLen(pathname, maxlenbuf);
             filesInArgs = true;
+            if(needsQuotes(pathname)){
+                quotesInFiles = true;
+            }
         }
     }
 
@@ -73,7 +77,7 @@ int main(int argc, char** args)
             if(filename[0] != '.'){
                 struct stat* statbuf = malloc(sizeof(struct stat));
                 lstat(pathname, statbuf);
-                printStat(statbuf, pathname, pathname, maxlenbuf, false);
+                printStat(statbuf, pathname, pathname, maxlenbuf, quotesInFiles);
                 free(statbuf);
             }
         }
@@ -285,7 +289,12 @@ void printStat(struct stat* statbuf, char* filename, char* path, struct maxlengt
         }
         else
         {
-            printf(" %s", filename);
+            if(longList){
+                printf(" %s", filename);
+            }
+            else{
+                printf("%s", filename);
+            }
         }
     }
     else{
