@@ -35,7 +35,7 @@ struct maxlengths
 void setOptionsFiles(int argc, char** args);
 bool isDir(char* path);
 void listDir(char* path);
-void printStat(struct stat* statbuf, char* filename, char* path,struct maxlengths* maxlenbuf);
+void printStat(struct stat* statbuf, char* filename, char* path, struct maxlengths* maxlenbuf);
 void lexicalSort(char** arr, int start, int end);
 void updateMaxLen(char* path, struct maxlengths* maxlenbuf);
 int numLen(__uintmax_t num);
@@ -230,7 +230,7 @@ void listDir(char* path)
     }
 }
 
-void printStat(struct stat* statbuf, char* filename, char* path,struct maxlengths* maxlenbuf)
+void printStat(struct stat* statbuf, char* filename, char* path, struct maxlengths* maxlenbuf)
 {
     if(index){
         printf("%*ju ", maxlenbuf->inoMaxLen, statbuf->st_ino);
@@ -271,6 +271,7 @@ void printStat(struct stat* statbuf, char* filename, char* path,struct maxlength
         char* mt = ctime(&statbuf->st_mtim.tv_sec);
         printf("%-7.*s%-5.*s%-6.*s", 6, mt+4, 4, mt+20, 5, mt+11);
     }
+
     if(ifContain(filename))
     {
         printf("'%s'", filename);
