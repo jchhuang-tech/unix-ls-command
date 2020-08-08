@@ -35,11 +35,11 @@ struct maxlengths
 void setOptionsFiles(int argc, char** args);
 bool isDir(char* path);
 void listDir(char* path);
-void printStat(struct stat* statbuf, char* filename, char* path, struct maxlengths* maxlenbuf);
+void printStat(struct stat* statbuf, char* filename, char* path, struct maxlengths* maxlenbuf, bool quotesInDir);
 void lexicalSort(char** arr, int start, int end);
 void updateMaxLen(char* path, struct maxlengths* maxlenbuf);
 int numLen(__uintmax_t num);
-bool ifContain(char* string);
+bool needsQuotes(char* string);
 
 int main(int argc, char** args)
 {
@@ -73,7 +73,7 @@ int main(int argc, char** args)
             if(filename[0] != '.'){
                 struct stat* statbuf = malloc(sizeof(struct stat));
                 lstat(pathname, statbuf);
-                printStat(statbuf, pathname, pathname, maxlenbuf);
+                printStat(statbuf, pathname, pathname, maxlenbuf, false);
                 free(statbuf);
             }
         }
@@ -177,6 +177,8 @@ void listDir(char* path)
     maxlenbuf = malloc(sizeof(struct maxlengths));
     memset(maxlenbuf, 0, sizeof(struct maxlengths));
 
+    bool quotesInDir = false;
+
     struct dirent* de = NULL;
 
     while ((de = readdir(dirp)) != NULL){
@@ -186,6 +188,10 @@ void listDir(char* path)
             snprintf(pathForLongList, sizeof(pathForLongList), "%s/%s", path, de->d_name);
 
             updateMaxLen(pathForLongList, maxlenbuf);
+
+            if(needsQuotes(de->d_name)){
+                quotesInDir = true;
+            }
 
             char* direntPath = malloc(PATH_MAX);
             strncpy(direntPath, pathForLongList, sizeof(pathForLongList));
@@ -200,7 +206,7 @@ void listDir(char* path)
     for(int i=0; i<direntCount; i++){
         struct stat* statbuf = malloc(sizeof(struct stat));
         lstat(direntList[i], statbuf);
-        printStat(statbuf, basename(direntList[i]), direntList[i], maxlenbuf);
+        printStat(statbuf, basename(direntList[i]), direntList[i], maxlenbuf, quotesInDir);
 
         if(recur){
             if(S_ISDIR(statbuf->st_mode)){
@@ -230,7 +236,7 @@ void listDir(char* path)
     }
 }
 
-void printStat(struct stat* statbuf, char* filename, char* path, struct maxlengths* maxlenbuf)
+void printStat(struct stat* statbuf, char* filename, char* path, struct maxlengths* maxlenbuf, bool quotesInDir)
 {
     if(index){
         printf("%*ju ", maxlenbuf->inoMaxLen, statbuf->st_ino);
@@ -272,14 +278,20 @@ void printStat(struct stat* statbuf, char* filename, char* path, struct maxlengt
         printf("%-7.*s%-5.*s%-6.*s", 6, mt+4, 4, mt+20, 5, mt+11);
     }
 
-    if(ifContain(filename))
-    {
-        printf("'%s'", filename);
+    if(quotesInDir){
+        if(needsQuotes(filename))
+        {
+            printf("'%s'", filename);
+        }
+        else
+        {
+            printf(" %s", filename);
+        }
     }
-    else
-    {
-    printf("%s", filename);
+    else{
+        printf("%s", filename);
     }
+
     
     if(longList){
         if(S_ISLNK(statbuf->st_mode)){
@@ -340,7 +352,7 @@ int numLen(__uintmax_t num)
     }
 }
 
-bool ifContain(char* string)
+bool needsQuotes(char* string)
 {
     if(strchr(string, ' ')!=NULL || 
         strchr(string, '!')!=NULL || 
