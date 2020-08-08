@@ -39,7 +39,7 @@ void printStat(struct stat* statbuf, char* filename, char* path,struct maxlength
 void lexicalSort(char** arr, int start, int end);
 void updateMaxLen(char* path, struct maxlengths* maxlenbuf);
 int numLen(__uintmax_t num);
-
+bool ifContain(char* string);
 
 int main(int argc, char** args)
 {
@@ -271,7 +271,15 @@ void printStat(struct stat* statbuf, char* filename, char* path,struct maxlength
         char* mt = ctime(&statbuf->st_mtim.tv_sec);
         printf("%-7.*s%-5.*s%-6.*s", 6, mt+4, 4, mt+20, 5, mt+11);
     }
+    if(ifContain(filename))
+    {
+        printf("'%s'", filename);
+    }
+    else
+    {
     printf("%s", filename);
+    }
+    
     if(longList){
         if(S_ISLNK(statbuf->st_mode)){
             char* linkbuf = malloc(PATH_MAX+1);
@@ -328,5 +336,18 @@ int numLen(__uintmax_t num)
     }
     else{
         return (int)(floor(log10(num)) + 1);
+    }
+}
+
+bool ifContain(char* string)
+{
+    if(strchr(string, ' ')!=NULL||strchr(string, '!')!=NULL||strchr(string, ',')!=NULL||strchr(string, '$')!=NULL||strchr(string, '&')!=NULL||strchr(string, '^')!=NULL)
+    {
+        return true;
+    }
+    else
+    {
+        return false;
+
     }
 }
