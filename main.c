@@ -341,13 +341,18 @@ int numLen(__uintmax_t num)
 
 bool ifContain(char* string)
 {
-    if(strchr(string, ' ')!=NULL||strchr(string, '!')!=NULL||strchr(string, ',')!=NULL||strchr(string, '$')!=NULL||strchr(string, '&')!=NULL||strchr(string, '^')!=NULL)
+    if(strchr(string, ' ')!=NULL || 
+        strchr(string, '!')!=NULL || 
+        strchr(string, '$')!=NULL || 
+        strchr(string, '&')!=NULL || 
+        strchr(string, '^')!=NULL || 
+        strchr(string, '(')!=NULL || 
+        strchr(string, ')')!=NULL)
     {
         return true;
     }
     else
     {
         return false;
-
     }
 }
