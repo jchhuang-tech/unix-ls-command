@@ -325,7 +325,11 @@ void printStat(struct stat* statbuf, char* filename, char* path, struct maxlengt
             }else{
                 perror("readlink failed");
             }
-            printf(" -> %s", linkbuf);
+            if(needsQuotes(linkbuf)){
+                printf(" -> '%s'", linkbuf);
+            }else{
+                printf(" -> %s", linkbuf);
+            }
             free(linkbuf);
         }
     }
