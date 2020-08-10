@@ -256,13 +256,27 @@ void printStat(struct stat* statbuf, char* filename, char* path, struct maxlengt
 
         printf( (statbuf->st_mode & S_IRUSR) ? "r" : "-");
         printf( (statbuf->st_mode & S_IWUSR) ? "w" : "-");
-        printf( (statbuf->st_mode & S_IXUSR) ? "x" : "-");
+        if (statbuf->st_mode & S_ISUID){
+            printf( (statbuf->st_mode & S_IXUSR) ? "s" : "S");
+        }else{
+            printf( (statbuf->st_mode & S_IXUSR) ? "x" : "-");
+        }
+
         printf( (statbuf->st_mode & S_IRGRP) ? "r" : "-");
         printf( (statbuf->st_mode & S_IWGRP) ? "w" : "-");
-        printf( (statbuf->st_mode & S_IXGRP) ? "x" : "-");
+        if (statbuf->st_mode & S_ISGID){
+            printf( (statbuf->st_mode & S_IXGRP) ? "s" : "l");
+        }else{
+            printf( (statbuf->st_mode & S_IXGRP) ? "x" : "-");
+        }
+
         printf( (statbuf->st_mode & S_IROTH) ? "r" : "-");
         printf( (statbuf->st_mode & S_IWOTH) ? "w" : "-");
-        printf( (statbuf->st_mode & S_IXOTH) ? "x" : "-");
+        if (statbuf->st_mode & __S_ISVTX){
+            printf( (statbuf->st_mode & S_IXOTH) ? "t" : "T");
+        }else{
+            printf( (statbuf->st_mode & S_IXOTH) ? "x" : "-");
+        }
         printf(" ");
 
         printf("%*ju ",maxlenbuf->nlinkMaxLen, statbuf->st_nlink);
