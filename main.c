@@ -322,14 +322,15 @@ void printStat(struct stat* statbuf, char* filename, char* path, struct maxlengt
             ssize_t linklen = readlink(path, linkbuf, PATH_MAX);
             if (linklen != -1){
                 linkbuf[linklen] = '\0';
-            }else{
-                perror("readlink failed");
+                if(needsQuotes(linkbuf)){
+                    printf(" -> '%s'", linkbuf);
+                }else{
+                    printf(" -> %s", linkbuf);
+                }
             }
-            if(needsQuotes(linkbuf)){
-                printf(" -> '%s'", linkbuf);
-            }else{
-                printf(" -> %s", linkbuf);
-            }
+            // else{
+            //     perror("readlink failed");
+            // }
             free(linkbuf);
         }
     }
